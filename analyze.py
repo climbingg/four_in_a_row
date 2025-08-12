@@ -13,16 +13,6 @@ history = [0]
 LJ = []
 table = {}
 
-print("載入中...")
-with open("table.txt") as file:
-    file = file.read().split("\n")
-    if file == [""]:
-        file.clear()
-print("載入完成!!")
-
-for one_of_table in file:
-    key, val = one_of_table.split("  ")
-    table[tuple(map(int, key.split()))] = list(map(lambda x: None if x == "None" else float("-inf") if x == "-inf" else int(x), val.split()))
 
 for i in range(42):
     y, x = one_to_two(i)

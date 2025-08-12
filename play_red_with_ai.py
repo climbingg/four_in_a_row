@@ -16,12 +16,6 @@ history = [0]
 LJ = []
 
 table = {}
-print("載入中...")
-with open("table.txt") as file:
-    file = file.read().split("\n")
-    if file == [""]:
-        file.clear()
-print("載入完成!!")
 
 for i in range(42):
     y, x = one_to_two(i)
