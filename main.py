@@ -179,7 +179,7 @@ def analyze_ai(user_depth: int) -> list[str | None]:
         for j in range(history[0], min(history[0] + user_depth - 1, 42)):
             max_depth[0] = j + 1
             score = bfs()
-            print(i, j)
+            print(i + 1, j)
             if score:                   # 因為0是False
                 ret[i] = score
                 break
