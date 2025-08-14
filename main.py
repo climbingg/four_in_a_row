@@ -313,6 +313,7 @@ def analyze() -> None:
                 print(f"{i}:", ai_res)
             if time.time() - t < 2:
                 depth.append(depth[-1] + 1)
+                print("加深！！！")
             else:
                 depth.append(depth[-1])
         else:
