@@ -1,3 +1,4 @@
+import time
 import random
 
 
@@ -12,7 +13,11 @@ board_red = [0]
 board_blue = [0]
 history_point = [None] * 42
 history = [0]
+depth = [8]
 table = {}
+is_win = [None]
+win = [0]
+win_lose = [0]
 LJ = []
 
 for i in range(42):
@@ -154,6 +159,9 @@ def bfs() -> int | None:
             table_res[i] = None if res == -1 else res
             undo()
             if table_res[i] == max_depth[0]:
+                win_lose[0] += 1
+                if is_win[0] == (history[0] + 1) % 2:
+                    win[0] += 1
                 return table_res[i]
         else:
             move(res_point)
@@ -166,10 +174,12 @@ def bfs() -> int | None:
 
 
 def analyze_ai(user_depth: int) -> list[str | None]:
+    is_win[0] = (history[0] + 1) % 2
     ret = [None] * 7
     for i in range(7):
         res_point = is_legal(int(i))
         if res_point == -1:
+            ret[i] = float("-inf")
             continue
         move(res_point)
         if check_res(res_point) != -1:
@@ -184,16 +194,25 @@ def analyze_ai(user_depth: int) -> list[str | None]:
                 ret[i] = score
                 break
         else:
-            ret[i] = "目前深度看不出來誰贏"
+            if win_lose[0] == 0:
+                ret[i] = 0.5
+            else:
+                ret[i] = win[0] / win_lose[0]
+        win[0] = 0
+        win_lose[0] = 0
         undo()
-    ret = list(map(lambda x: None if x is None else "平手" if x == 0 else "目前深度看不出來誰贏" if x == "目前深度看不出來誰贏" else f"{BLUE}到第{x}步藍獲勝!!{RESET}(再{x - history[0]}步!!)" if x % 2 == 0 else f"{RED}到第{x}步紅獲勝!!{RESET}(再{x - history[0]}步!!)", ret))
+    ret = list(map(lambda x: "非法棋步" if x == float("-inf") else f"勝率{x * 100}%" if type(x) == float else "平手" if x == 0 else f"{BLUE}到第{x}步藍獲勝!!{RESET}(再{x - history[0]}步!!)" if x % 2 == 0 else f"{RED}到第{x}步紅獲勝!!{RESET}(再{x - history[0]}步!!)", ret))
+    table.clear()
     return ret
 
 
 def ai_play(ai: str) -> int:
+    is_win[0] = (history[0] + 1) % 2
     best_moves_val = None
     best_moves = []
     for i in range(7):
+        if (board_red[0], board_blue[0]) in table and table[(board_red[0], board_blue[0])][i] is not None and table[(board_red[0], board_blue[0])][i] != float("-inf") and table[(board_red[0], board_blue[0])][i] % 2 != history[0] % 2:
+            return i
         res_point = is_legal(i)
         if res_point == -1:
             continue
@@ -203,7 +222,7 @@ def ai_play(ai: str) -> int:
             undo()
             print("你輸了!!!!")
             return i
-        for j in range(history[0], min(history[0] + 8 - 1, 42)):
+        for j in range(history[0], min(history[0] + depth[-1] - 1, 42)):
             max_depth[0] = j + 1
             score = bfs()
             if score:                   # 因為0是False
@@ -214,7 +233,7 @@ def ai_play(ai: str) -> int:
                 if best_moves_val is None:
                     best_moves_val = score
                     best_moves = [i]
-                if best_moves_val != "看不出輸贏":
+                if type(best_moves_val) != float:
                     if best_moves_val < score:
                         best_moves_val = score
                         best_moves = [i]
@@ -223,14 +242,29 @@ def ai_play(ai: str) -> int:
                 break
         else:
             if best_moves_val is None:
-                best_moves_val = "看不出輸贏"
+                if win_lose[0] == 0:
+                    best_moves_val = 0.5
+                else:
+                    best_moves_val = win[0] / win_lose[0]
                 best_moves = [i]
-            elif best_moves_val == "看不出輸贏":
-                best_moves.append(i)
             elif type(best_moves_val) == int:
-                best_moves_val = "看不出輸贏"
+                if win_lose[0] == 0:
+                    best_moves_val = 0.5
+                else:
+                    best_moves_val = win[0] / win_lose[0]
                 best_moves = [i]
+            elif type(best_moves_val) == float:
+                if win_lose[0] == 0:
+                    rate = 0.5
+                else:
+                    rate = win[0] / win_lose[0]
+                if best_moves_val < rate:
+                    best_moves_val = rate
+                    best_moves = [i]
+        win[0] = 0
+        win_lose[0] = 0
         undo()
+    table.clear()
     return random.choice(best_moves)
 
 
@@ -270,16 +304,24 @@ def double() -> None:
 
 
 def analyze() -> None:
-    user_depth = int(input("你希望程式算未來幾步(建議8步)?:"))
+    depth[0] = int(input("你希望程式算未來幾步(建議初始8步)(ai會自動調節)?:"))
     board_print()
     while True:
         if input("讓ai分析?(需要輸入yes):") == "yes":
-            for i, ai_res in enumerate(analyze_ai(user_depth), 1):
+            t = time.time()
+            for i, ai_res in enumerate(analyze_ai(depth[0]), 1):
                 print(f"{i}:", ai_res)
+            if time.time() - t < 2:
+                depth.append(depth[-1] + 1)
+            else:
+                depth.append(depth[-1])
+        else:
+            depth.append(depth[-1])
         m = input("輸入1~7或undo:")
         point = user_is_legal(m)
         while point == -1:
             if m == "undo":
+                depth.pop()
                 undo()
                 break
             print("error")
@@ -309,6 +351,7 @@ def play_red() -> None:
         res_point = user_is_legal(m)
         while res_point == -1:
             if m == "undo":
+                depth.pop()
                 undo()
                 undo()
                 pre_undo = True
@@ -331,7 +374,13 @@ def play_red() -> None:
                 break
         board_print()
         if not pre_undo:
+            t = time.time()
             res_point = is_legal(ai_play("blue"))
+            if time.time() - t < 2:
+                print("加深！！！")
+                depth.append(depth[-1] + 1)
+            else:
+                depth.append(depth[-1])
             move(res_point)
             res = check_res(res_point)
             if res != -1:
@@ -354,7 +403,13 @@ def play_blue() -> None:
     pre_undo = False
     while True:
         if not pre_undo:
+            t = time.time()
             res_point = is_legal(ai_play("red"))
+            if time.time() - t < 2:
+                print("加深！！！")
+                depth.append(depth[-1] + 1)
+            else:
+                depth.append(depth[-1])
             move(res_point)
             res = check_res(res_point)
             if res != -1:
@@ -374,12 +429,14 @@ def play_blue() -> None:
         res_point = user_is_legal(m)
         while res_point == -1:
             if m == "undo":
+                depth.pop()
                 undo()
                 undo()
                 pre_undo = True
                 break
             print("error")
             m = input("輸入1~7或undo:")
+            res_point = user_is_legal(m)
         else:
             move(res_point)
             res = check_res(res_point)
