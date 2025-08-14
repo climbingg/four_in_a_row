@@ -212,6 +212,7 @@ def ai_play(ai: str) -> int:
     best_moves = []
     for i in range(7):
         if (board_red[0], board_blue[0]) in table and table[(board_red[0], board_blue[0])][i] is not None and table[(board_red[0], board_blue[0])][i] != float("-inf") and table[(board_red[0], board_blue[0])][i] % 2 != history[0] % 2:
+            print("你輸定了")
             return i
     for i in range(7):
         res_point = is_legal(i)
