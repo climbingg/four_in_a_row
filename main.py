@@ -1,6 +1,7 @@
 import time
 import random
 
+random.seed(5)
 
 def one_to_two(n: int) -> tuple[int, int]:
     return n // 7, n % 7
@@ -159,6 +160,11 @@ def bfs() -> int | None:
                 return table_res[i]
         else:
             move(res_point)
+            res = check_res(res_point)
+            table_res[i] = None if res == -1 else res
+            if table_res[i] is not None:
+                undo()
+                return table_res[i]
             table_res[i] = bfs()
             undo()
             if table_res[i] and table_res[i] == max_depth[0] and history[0] % 2 != max_depth[0] % 2:
