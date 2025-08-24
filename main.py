@@ -1,7 +1,6 @@
 import time
 import random
 
-random.seed(5)
 
 def one_to_two(n: int) -> tuple[int, int]:
     return n // 7, n % 7
@@ -289,7 +288,7 @@ def analyze() -> None:
     while True:
         if input("讓ai分析?(需要輸入yes):") == "yes":
             t = time.time()
-            for i, ai_res in enumerate(analyze_ai(depth[0]), 1):
+            for i, ai_res in enumerate(analyze_ai(depth[-1]), 1):
                 print(f"{i}:", ai_res)
             if time.time() - t < 0.5:
                 depth.append(depth[-1] + 1)
