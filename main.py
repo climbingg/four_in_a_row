@@ -243,7 +243,6 @@ def ai_play(ai: str) -> int:
                 best_moves = [i]
         undo()
     table.clear()
-    print(best_moves)
     return random.choice(best_moves)
 
 
